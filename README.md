@@ -11,18 +11,10 @@ This project completes 2 tasks:
 - Linux/Unix
 
 ## Running the App
-**Starting**
-```
-docker-compose up
-```
 
-**Access the financial API app container**
-```
-docker exec -it container_name bash
-```
+**Start Project** 
 
-**Run the Fetch Financial Data Funcion** 
-1. Define parameters to the .env file in the root directory for docker compose use.
+Define parameters to the .env file in the root directory for docker compose use.
 ```
 export API_KEY={api_key}
 export STOCK_API_URL=https://www.alphavantage.co/query
@@ -30,22 +22,26 @@ export APP_DATABASE_URI=mysql://{user}:@app_mysql:{port}/{database_name}
 export DB_ROOT_PASSWORD={DB_ROOT_PASSWORD}
 export DEFAULT_DB_NAME={DEFAULT_DB_NAME}
 ```
-2. Define parameters to the .env file in the in /final directory
+
+Define parameters to the .env file in the in /final directory
 ```
 SQLALCHEMY_DATABASE_URI=mysql+mysqlconnector://{user}:@app_mysql:{port}/{database_name}
 ```
 
-3. Build corresponding containers.
+Build corresponding containers.
 ```
 docker-compose up
 ```
+**Run the Fetch Financial Data Function**
 
-4. Execute get_raw_data.py script and save fetched data in database
+Execute get_raw_data.py script and save fetched data in database
 ```
 python get_raw_data.py
 ```
 
-5. Use Financial Data Api
+**Run the Financial Data Function**
+
+Use Financial Data Api
 ```
 curl -X GET 'http://localhost:5000/api/financial_data?start_date=2023-02-21&end_date=2023-03-01&symbol=IBM&limit=3&page=1'
 ```
@@ -87,7 +83,9 @@ formatted output:
 }
 ```
 
-5. Use Statistics Data Api
+**Run the Statistics Data Function**
+
+Use Statistics Data Api
 ```
 curl -X GET 'http://localhost:5000/api/statistics?start_date=2023-02-21&end_date=2023-03-06&symbol=IBM'
 ```
@@ -108,7 +106,9 @@ formatted output:
 }
 ```
 
-6. Stop the application.
+**Stop Project**
+
+Stop the application.
 ```
 docker-compose down
 ```
