@@ -1,0 +1,32 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URI={APP_DATABASE_URI}
+    command: sh -c "python financial/manage.py"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+  db:
+    image: mysql:latest
+    container_name: app_mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 3
+    environment:
+      - MYSQL_ROOT_PASSWORD={DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE={DEFAULT_DB_NAME}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+
+

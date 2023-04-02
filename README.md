@@ -1,228 +1,119 @@
-# Take-Home Assignment
+## Project description
+This project completes 2 tasks:
+- Fetch financial data from an AlphaVantage API , then process the data and put it into the database.
+- Offer api to display fetched financial data with page info and  computed statistics with the financial data.
 
-The goal of this take-home assignment is to evaluate your abilities to use API, data processing and transformation, SQL, and implement a new API service in Python.
+## Tech stack
+- Python 3
+- Flask
+- MySQL
+- Docker
+- Linux/Unix
 
-You should first fork this repository, and then send us the code or the url of your forked repository via email.
+## Running the App
+**Starting**
+```
+docker-compose up
+```
 
-**Please do not submit any pull requests to this repository.**
+**Access the financial API app container**
+```
+docker exec -it container_name bash
+```
 
-You need to perform the following **Two** tasks:
+**Run the Fetch Financial Data Funcion** 
+1. Define parameters to the .env file in the root directory for docker compose use.
+```
+export API_KEY={api_key}
+export STOCK_API_URL=https://www.alphavantage.co/query
+export APP_DATABASE_URI=mysql://{user}:@app_mysql:{port}/{database_name}
+export DB_ROOT_PASSWORD={DB_ROOT_PASSWORD}
+export DEFAULT_DB_NAME={DEFAULT_DB_NAME}
+```
+2. Define parameters to the .env file in the in /final directory
+```
+SQLALCHEMY_DATABASE_URI=mysql+mysqlconnector://{user}:@app_mysql:{port}/{database_name}
+```
 
-## Task1
-### Problem Statement:
-1. Retrieve the financial data of Two given stocks (IBM, Apple Inc.)for the most recently two weeks. Please using an free API provider named [AlphaVantage](https://www.alphavantage.co/documentation/) 
-2. Process the raw API data response, a sample output after process should be like:
+3. Build corresponding containers.
+```
+docker-compose up
+```
+
+4. Execute get_raw_data.py script and save fetched data in database
+```
+python get_raw_data.py
+```
+
+5. Use Financial Data Api
+```
+curl -X GET 'http://localhost:5000/api/financial_data?start_date=2023-02-21&end_date=2023-03-01&symbol=IBM&limit=3&page=1'
+```
+formatted output:
 ```
 {
-    "symbol": "IBM",
-    "date": "2023-02-14",
-    "open_price": "153.08",
-    "close_price": "154.52",
-    "volume": "62199013",
-},
-{
-    "symbol": "IBM",
-    "date": "2023-02-13",
-    "open_price": "153.08",
-    "close_price": "154.52",
-    "volume": "59099013"
-},
-{
-    "symbol": "IBM",
-    "date": "2023-02-12",
-    "open_price": "153.08",
-    "close_price": "154.52",
-    "volume": "42399013"
-},
-...
-``` 
-3. Insert the records above into a table named `financial_data` in your local database, column name should be same as the processed data from step 2 above (symbol, date, open_price, close_price, volume) 
-
-
-## Task2
-### Problem Statement:
-1. Implement an Get financial_data API to retrieve records from `financial_data` table, please note that:
-    - the endpoint should accept following parameters: start_date, end_date, symbol, all parameters are optional
-    - the endpoint should support pagination with parameter: limit and page, if no parameters are given, default limit for one page is 5
-    - the endpoint should return an result with three properties:
-        - data: an array includes actual results
-        - pagination: handle pagination with four properties
-            
-            - count: count of all records without panigation
-            - page: current page index
-            - limit: limit of records can be retrieved for single page
-            - pages: total number of pages
-        - info: includes any error info if applies
-    
-
-Sample Request:
-```bash
-curl -X GET 'http://localhost:5000/api/financial_data?start_date=2023-01-01&end_date=2023-01-14&symbol=IBM&limit=3&page=2'
-
-```
-Sample Response:
-```
-{
-    "data": [
-        {
-            "symbol": "IBM",
-            "date": "2023-01-05",
-            "open_price": "153.08",
-            "close_price": "154.52",
-            "volume": "62199013",
-        },
-        {
-            "symbol": "IBM",
-            "date": "2023-01-06",
-            "open_price": "153.08",
-            "close_price": "154.52",
-            "volume": "59099013"
-        },
-        {
-            "symbol": "IBM",
-            "date": "2023-01-09",
-            "open_price": "153.08",
-            "close_price": "154.52",
-            "volume": "42399013"
-        }
-    ],
-    "pagination": {
-        "count": 20,
-        "page": 2,
-        "limit": 3,
-        "pages": 7
+  "data": [
+    {
+      "close_price": "128.19",
+      "date": "2023-03-01",
+      "open_price": "128.90",
+      "symbol": "IBM",
+      "volume": "3760678"
     },
-    "info": {'error': ''}
+    {
+      "close_price": "129.30",
+      "date": "2023-02-28",
+      "open_price": "130.55",
+      "symbol": "IBM",
+      "volume": "5143133"
+    },
+    {
+      "close_price": "130.49",
+      "date": "2023-02-27",
+      "open_price": "131.42",
+      "symbol": "IBM",
+      "volume": "2761326"
+    }
+  ],
+  "info": {
+    "error": ""
+  },
+  "pagination": {
+    "count": 7,
+    "limit": 3,
+    "page": 1,
+    "pages": 3
+  }
 }
-
 ```
 
-2. Implement an Get statistics API to perform the following calculations on the data in given period of time:
-    - Calculate the average daily open price for the period
-    - Calculate the average daily closing price for the period
-    - Calculate the average daily volume for the period
-
-    - the endpoint should accept following parameters: start_date, end_date, symbols, all parameters are required
-    - the endpoint should return an result with two properties:
-        - data: calculated statistic results
-        - info: includes any error info if applies
-
-Sample request:
-```bash
-curl -X GET http://localhost:5000/api/statistics?start_date=2023-01-01&end_date=2023-01-31&symbol=IBM
-
+5. Use Statistics Data Api
 ```
-Sample response:
+curl -X GET 'http://localhost:5000/api/statistics?start_date=2023-02-21&end_date=2023-03-06&symbol=IBM'
+```
+formatted output:
 ```
 {
-    "data": {
-        "start_date": "2023-01-01",
-        "end_date": "2023-01-31",
-        "symbol": "IBM",
-        "average_daily_open_price": 123.45,
-        "average_daily_close_price": 234.56,
-        "average_daily_volume": 1000000
-    },
-    "info": {'error': ''}
+  "data": {
+    "average_daily_close_price": 130.07,
+    "average_daily_open_price": 130.63,
+    "average_daily_volume": 3562736,
+    "end_date": "2023-03-06",
+    "start_date": "2023-02-21",
+    "symbol": "IBM"
+  },
+  "info": {
+    "error": ""
+  }
 }
-
 ```
 
-## What you should deliver:
-Directory structure:
+6. Stop the application.
 ```
-project-name/
-├── model.py
-├── schema.sql
-├── get_raw_data.py
-├── Dockerfile
-├── docker-compose.yml
-├── README.md
-├── requirements.txt
-└── financial/<Include API service code here>
-
+docker-compose down
 ```
 
-1. A `get_raw_data.py` file in root folder
-
-    Action: 
-    
-    Run 
-    ```bash
-    python get_raw_data.py
-    ```
-
-    Expectation: 
-    
-    1. Financial data will be retrieved from API and processed,then insert all processed records into table `financial_data` in local db
-    2. Duplicated records should be avoided when executing get_raw_data multiple times, consider implementing your own logic to perform upsert operation if the database you select does not have native support for such operation.
-
-2. A `schema.sql` file in root folder
-    
-    Define schema for financial_data table, if you prefer to use an ORM library, just **ignore** this deliver item and jump to item3 below.
-
-    Action: Run schema definition in local db
-
-    Expectation: A new table named `financial_data` should be created if not exists in db
-
-3. (Optional) A `model.py` file: 
-    
-    If you perfer to use a ORM library instead of DDL, please include your model definition in `model.py`, and describe how to perform migration in README.md file
-
-4. A `Dockerfile` file in root folder
-
-    Build up your local API service
-
-5. A `docker-compose.yml` file in root folder
-
-    Two services should be defined in docker-compose.yml: Database and your API
-
-    Action:
-
-    ```bash
-    docker-compose up
-    ```
-
-    Expectation:
-    Both database and your API service is up and running in local development environment
-
-6. A `financial` sub-folder:
-
-    Put all API implementation related codes in here
-
-7. `README.md`: 
-
-    You should include:
-    - A brief project description
-    - Tech stack you are using in this project
-    - How to run your code in local environment
-    - Provide a description of how to maintain the API key to retrieve financial data from AlphaVantage in both local development and production environment.
-
-8. A `requirements.txt` file:
-
-    It should contain your dependency libraries.
-
-## Requirements:
-
-- The program should be written in Python 3.
-- You are free to use any API and libraries you like, but should include a brief explanation of why you chose the API and libraries you used in README.
-- The API key to retrieve financial data should be stored securely. Please provide a description of how to maintain the API key from both local development and production environment in README.
-- The database in Problem Statement 1 could be created using SQLite/MySQL/.. with your own choice.
-- The program should include error handling to handle cases where the API returns an error or the data is not in the correct format.
-- The program should cover as many edge cases as possible, not limited to expectations from deliverable above.
-- The program should use appropriate data structures and algorithms to store the data and perform the calculations.
-- The program should include appropriate documentation, including docstrings and inline comments to explain the code.
-
-## Evaluation Criteria:
-
-Your solution will be evaluated based on the following criteria:
-
-- Correctness: Does the program produce the correct results?
-- Code quality: Is the code well-structured, easy to read, and maintainable?
-- Design: Does the program make good use of functions, data structures, algorithms, databases, and libraries?
-- Error handling: Does the program handle errors and unexpected input appropriately?
-- Documentation: Is the code adequately documented, with clear explanations of the algorithms and data structures used?
-
-## Additional Notes:
-
-You have 7 days to complete this assignment and submit your solution.
+## How to maintain the API key
+- Use API key as environment variable configuration instead of saving it in public environment.
+- Set different API keys for production and development environments.
+- Deploy the application on the cloud and use extra safe strategy.
